@@ -1,0 +1,47 @@
+const express = require('express');
+const path    = require('path');
+const cors    = require('cors');
+const { initDB } = require('./db');
+const routes    = require('./routes');
+
+require('dotenv').config();
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+
+// ─── Middleware ───────────────────────────────────────────────────
+app.use(cors());
+app.use(express.json());
+
+// ─── API routes ───────────────────────────────────────────────────
+app.use('/api', routes);
+
+// ─── Health check ─────────────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok', message: 'API ishlayapti 🚀' }));
+
+// ─── Frontend (React build) ───────────────────────────────────────
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
+
+// SPA fallback: barcha boshqa yo'llar index.html ga
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
+// ─── Start ───────────────────────────────────────────────────────
+async function start() {
+  await initDB();
+  app.listen(PORT, () => {
+    console.log(`🚀 Server: http://localhost:${PORT}`);
+    console.log('─────────────────────────────────────────────');
+    console.log('POST  /api/users         → ro\'yxatdan o\'tish');
+    console.log('GET   /api/users         → barcha userlar');
+    console.log('GET   /api/users/:id     → bitta user');
+    console.log('POST  /api/results       → natija saqlash');
+    console.log('GET   /api/results       → barcha natijalar');
+    console.log('GET   /api/results?userId=DH-001  → user natijalari');
+    console.log('─────────────────────────────────────────────');
+  });
+}
+
+start();
